@@ -36,6 +36,23 @@ sys_wait(void)
   return kwait(p);
 }
 
+///////////////////////////////////
+uint64
+sys_wait2(void)
+{
+  // holds address of where the exit status should be written
+  uint64 p;
+  // holds address of where rusage should be written
+  uint64 ru;
+  // gets first argument from exit status adress, and stores it into p
+  argaddr(0, &p);
+  // gets second argument from rusage address, and stores it into ru
+  argaddr(1, &ru);
+  // calls the kernel function from proc.c
+  return kwait2(p, ru);
+}
+//////////////////////////////////
+
 uint64
 sys_sbrk(void)
 {

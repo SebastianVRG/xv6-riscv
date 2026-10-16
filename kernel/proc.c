@@ -510,6 +510,80 @@ kwait2(uint64 addr, uint64 ruaddr)
 ////////////////////////////////////////////////
 
 
+//////////////////////////////////////////////////////////////////////////
+
+// Fill in an array of struct pstat, located in the caller's
+// memory at address addr.
+// Return the number of processes, or -1 if an error occurred.
+int
+getprocs(uint64 addr)
+{
+  // pointer to current slot of the process table
+  struct proc *p;
+  // the process that called getprocs. 
+  struct proc *me = myproc();
+  // temp storage for one process's info.
+  struct pstat ps;
+  // number of processes found so far.
+  int proc_found = 0;
+
+  // go through the whole process table
+  for (p = proc; p < &proc[NPROC]; p++) {
+    // wait_lock is needed to read p->parent safely, and thus needed before p->lock
+    acquire(&wait_lock);
+    acquire(&p->lock);
+
+    // if the slot is UNUSED, release both locks and skip it
+    if (p->state == UNUSED) {
+      release(&p->lock);
+      release(&wait_lock);
+      continue;
+    }
+
+    // else, it copies current process's info into the temp struct
+    ps.pid = p->pid;
+    ps.state = p->state;
+    ps.size = p->sz;
+
+    // if process has a parent, store parent's pid in ppid (parent process id)
+    if (p->parent)
+      ps.ppid = p->parent->pid;
+    
+    // else default it to 0
+    else
+      ps.ppid = 0;
+    
+    // copy the process's name into the temp struct, limited to the size of the name field (16 bytes)
+    safestrcpy(ps.name, p->name, sizeof(ps.name));
+
+    // release both locks before copyout and write to user memory
+    release(&p->lock);
+    release(&wait_lock);
+
+    // copy temp struct to the next available slot of the user's array,
+    // Copyout copies from kernel to user memory
+    // me->pagetable, tells the kernel where the user's virtual address are located on phys mem
+    // me->sz, size of caller's memory, used as a bound to prevent the kernel writing 
+    // in memory the caller does not own
+    // addr + proc_found * sizeof(ps), calculates the destination address in user memory;
+    // addr being the start, sizeof(ps) is the size of the entry, and by multiplying
+    // with proc_found, it skips already written entries; 0 for first slot, and so on. 
+    // (char *)&ps, address of temp struct in the kernel, (char *) to copy raw bytes
+    // sizeof(ps), the bytes to copy
+    // if the copy fails (less than 0), return -1 as an error 
+    if (copyout(me->pagetable, me->sz, addr + proc_found * sizeof(ps),
+                (char *)&ps, sizeof(ps)) < 0)
+      return -1;
+
+    // count this process 
+    proc_found++;
+  }
+
+  // number of processes copied to the user's array
+  return proc_found;
+}
+///////////////////////////////////////////////////
+
 // Per-CPU process scheduler.
 // Each CPU calls scheduler() after setting itself up.
 // Scheduler never returns.  It loops, doing:

@@ -27,6 +27,8 @@ entry("wait");
 ##########################
 entry("wait2");
 ##########################
+entry("getprocs");
+#########################
 entry("pipe");
 entry("read");
 entry("write");

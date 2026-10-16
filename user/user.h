@@ -4,6 +4,8 @@ struct stat;
 /////////////////
 struct rusage;
 ////////////////
+struct pstat;
+////////////////////////
 
 // system calls
 int fork(void);
@@ -12,6 +14,8 @@ int wait(int *);
 ///////////////////////////////
 int wait2(int*, struct rusage*);
 /////////////////////////////
+int getprocs(struct pstat*);
+/////////////////////////////////
 int pipe(int *);
 int write(int, const void *, int);
 int read(int, void *, int);

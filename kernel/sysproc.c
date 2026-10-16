@@ -52,7 +52,18 @@ sys_wait2(void)
   return kwait2(p, ru);
 }
 //////////////////////////////////
-
+//////////////////////////////////
+uint64
+sys_getprocs(void)
+{
+  // holds address of the user's array of struct pstat
+  uint64 addr;
+  // gets first argument from the user (array address), and stores it into addr
+  argaddr(0, &addr);
+  // calls the kernel function from proc.c, and returns number of processes.
+  return getprocs(addr);
+}
+//////////////////////////////////////////
 uint64
 sys_sbrk(void)
 {

@@ -1,3 +1,10 @@
+////////////////////////////////////////////////////
+#ifndef _PSTAT_H
+#define _PSTAT_H
+
+enum procstate { UNUSED, USED, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };
+///////////////////////////////////////
+
 struct rusage {
    uint cputime;
 };
@@ -10,3 +17,5 @@ struct pstat {
  char name[16]; // Parent command name
 };
 ///////////////////////////////////////
+
+#endif

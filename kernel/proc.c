@@ -649,7 +649,9 @@ ksetpriority(int pr)
   return 0;
 }
 //////////////////////////////////////2.2
-
+////////////////////////2.4
+#if SCHEDULER == SCHED_RR
+///////////////////////////2.4
 // Per-CPU process scheduler.
 // Each CPU calls scheduler() after setting itself up.
 // Scheduler never returns.  It loops, doing:
@@ -700,6 +702,86 @@ scheduler(void)
     }
   }
 }
+
+///////////////////////////////////2.4
+#elif SCHEDULER == SCHED_PRIORITY
+// Priority scheduler: runs the RUNNABLE process
+// with the highest priority.
+void
+scheduler(void)
+{
+  // loop variable over the process table
+  struct proc *p;
+  // holder of best RUNNABLE process so far
+  struct proc *best;
+  // pointer to the CPU this scheduler runs on
+  struct cpu *c = mycpu();
+
+  // no process is running on this CPU yet
+  c->proc = 0;
+  for (;;) {
+    // The most recent process to run may have had interrupts
+    // turned off; enable them to avoid a deadlock if all
+    // processes are waiting. Then turn them back off
+    // to avoid a possible race between an interrupt
+    // and wfi.
+    intr_on();
+    intr_off();
+
+    // no candidate found yet at the start of each scan
+    best = 0;
+    // go through the whole process table
+    for (p = proc; p < &proc[NPROC]; p++) {
+      // lock the slot before reading its state and priority
+      acquire(&p->lock);
+      // candidate must be RUNNABLE.
+      // if it is the first one found (best == 0)
+      // or with a higher priority than the current best
+      // it is replaced. 
+      if (p->state == RUNNABLE &&
+          (best == 0 || p->priority > best->priority)) {
+        // the previous best is replaced, and its lock is released
+        if (best != 0)
+          release(&best->lock);
+        // the new best keeps its lock held.
+        best = p;
+        // skip the release
+        continue;
+      }
+      // not a better candidate, so release its lock
+      release(&p->lock);
+    }
+
+    // a RUNNABLE process was found
+    if (best != 0) {
+      // best is still locked, and can be switched to safely
+      p = best;
+      // Switch to chosen process.  It is the process's job
+      // to release its lock and then reacquire it
+      // before jumping back to us.
+      p->state = RUNNING;
+      // record it as the process running on this CPU
+      c->proc = p;
+      // switch from the scheduler context to the process context
+      swtch(&c->context, &p->context);
+
+      // Don't re-enable interrupts on release.
+      mycpu()->intena = 0;
+      // Process is done running for now.
+      // It should have changed its p->state before coming back.
+      c->proc = 0;
+      // release the lock held since the scan
+      release(&p->lock);
+    } 
+    else {
+      // nothing to run, wait for an interrupt
+      asm volatile("wfi");
+    }
+  }
+}
+#endif
+///////////////////////////////////2.4
+
 
 // Switch to scheduler.  Must hold only p->lock
 // and have changed proc->state. Saves and restores

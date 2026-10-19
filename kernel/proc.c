@@ -133,6 +133,9 @@ found:
 ////////////////////////////////////////////////////////
   p->priority = 0;  // Initialize priority
 ///////////////////////////////////////////////////
+/////////////////////////2.3
+  p->readytime = 0;  // Initialize readytime
+//////////////////////////////2.3
 
   // Allocate a trapframe page.
   if ((p->trapframe = (struct trapframe *)kalloc()) == 0) {
@@ -235,6 +238,9 @@ userinit(void)
   p->cwd = namei("/");
 
   p->state = RUNNABLE;
+  /////////////////////////2.3
+  p->readytime = ticks;  // Process becomes RUNNABLE
+  //////////////////////////////2.3
 
   release(&p->lock);
 }
@@ -310,6 +316,9 @@ kfork(void)
 
   acquire(&np->lock);
   np->state = RUNNABLE;
+  /////////////////////////2.3
+  np->readytime = ticks;  // Process becomes RUNNABLE
+  //////////////////////////////2.3
   release(&np->lock);
 
   return pid;
@@ -552,6 +561,11 @@ getprocs(uint64 addr)
     // copy the process's priority into the temp struct
     ps.priority = p->priority;
     //////////////////////////////////2.2
+    /////////////////////////2.3
+    // copy the process's readytime into the temp struct
+    ps.readytime = p->readytime;
+    //////////////////////////////2.3
+
 
     // if process has a parent, store parent's pid in ppid (parent process id)
     if (p->parent)
@@ -721,6 +735,9 @@ yield(void)
   struct proc *p = myproc();
   acquire(&p->lock);
   p->state = RUNNABLE;
+  /////////////////////////2.3
+  p->readytime = ticks;  // Process becomes RUNNABLE
+  //////////////////////////////2.3
   sched();
   release(&p->lock);
 }
@@ -807,6 +824,9 @@ wakeup(void *chan)
       // go to sleep, also set it back to RUNNING.
       if (p->state == SLEEPING) {
         p->state = RUNNABLE;
+	/////////////////////////2.3
+        p->readytime = ticks;  // Process becomes RUNNABLE
+	//////////////////////////////2.3
       }
     }
     release(&p->lock);
@@ -828,6 +848,9 @@ kkill(int pid)
       if (p->state == SLEEPING) {
         // Wake process from sleep().
         p->state = RUNNABLE;
+	/////////////////////////2.3
+        p->readytime = ticks;  // Process becomes RUNNABLE
+	//////////////////////////////2.3
       }
       release(&p->lock);
       return 0;

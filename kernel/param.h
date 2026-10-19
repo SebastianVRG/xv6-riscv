@@ -19,3 +19,6 @@
 //#define SCHEDULER      SCHED_RR
 #define SCHEDULER      SCHED_PRIORITY
 ///////////////////////////2.4
+/////////////2.5
+#define AGING 1
+///////////////2.5

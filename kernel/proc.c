@@ -649,6 +649,26 @@ ksetpriority(int pr)
   return 0;
 }
 //////////////////////////////////////2.2
+///////////////////////////2.5
+// Effective priority: priority plus the time spent waiting as RUNNABLE.
+// Capped at 99.
+static int
+effpriority(struct proc *p)
+{
+  #if AGING
+  // time waiting since the process became RUNNABLE
+  int eff = p->priority + (ticks - p->readytime);
+  #else
+  // aging disabled, so effective priority equals priority
+  int eff = p->priority;
+  #endif
+  // cap at the maximum effective priority
+  if (eff > 99)
+    eff = 99;
+  return eff;
+}
+///////////////////////////2.5
+
 ////////////////////////2.4
 #if SCHEDULER == SCHED_RR
 ///////////////////////////2.4
@@ -737,9 +757,12 @@ scheduler(void)
       // candidate must be RUNNABLE.
       // if it is the first one found (best == 0)
       // or with a higher priority than the current best
-      // it is replaced. 
+      // it is replaced.
+	///////////////////////////2.5 
       if (p->state == RUNNABLE &&
-          (best == 0 || p->priority > best->priority)) {
+         //  (best == 0 || p->priority > best->priority)) {
+	 (best == 0 || effpriority(p) > effpriority(best))) {
+	///////////////////////////2.5
         // the previous best is replaced, and its lock is released
         if (best != 0)
           release(&best->lock);

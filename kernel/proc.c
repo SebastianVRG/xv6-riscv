@@ -131,6 +131,8 @@ found:
 ////////////////////////////////////////////////////
   p->cputime = 0;  // Initialize cputime
 ////////////////////////////////////////////////////////
+  p->priority = 0;  // Initialize priority
+///////////////////////////////////////////////////
 
   // Allocate a trapframe page.
   if ((p->trapframe = (struct trapframe *)kalloc()) == 0) {
@@ -281,7 +283,9 @@ kfork(void)
     return -1;
   }
   np->sz = p->sz;
-
+  ///////////////////2
+  np->priority = p->priority;  // Child inherits parent's priority
+  ////////////////////////2
   // copy saved user registers.
   *(np->trapframe) = *(p->trapframe);
 
@@ -544,6 +548,10 @@ getprocs(uint64 addr)
     ps.pid = p->pid;
     ps.state = p->state;
     ps.size = p->sz;
+    ///////////////////////////////2.2
+    // copy the process's priority into the temp struct
+    ps.priority = p->priority;
+    //////////////////////////////////2.2
 
     // if process has a parent, store parent's pid in ppid (parent process id)
     if (p->parent)
@@ -583,6 +591,50 @@ getprocs(uint64 addr)
   return proc_found;
 }
 ///////////////////////////////////////////////////
+
+//////////////////////////////////////2.2
+// Return the calling process's priority.
+int
+kgetpriority(void)
+{
+  // myproc() returns a pointer to the process that made the system call
+  struct proc *p = myproc();
+  // temp variable to hold the priority while the lock is held.
+  int pr;
+
+  // take process's lock.
+  acquire(&p->lock);
+  // copy the priority into the temp variable.
+  pr = p->priority;
+  // release the lock. 
+  release(&p->lock);
+  // return the saved value;
+  return pr;
+}
+
+// Set the calling process's priority. Valid range is 0 to 49. 
+// Return 0 on success, -1 if out of range.
+int
+ksetpriority(int pr)
+{
+  // myproc() returns a pointer to the process that made the system call
+  struct proc *p = myproc();
+
+  // check range (0 to 49)
+  if(pr < 0 || pr > 49)
+    // if not in range, return -1
+    return -1;
+
+  // take process's lock.
+  acquire(&p->lock);
+  // store the new priority in the process.
+  p->priority = pr;
+  // release the lock. 
+  release(&p->lock);
+  // return 0, meaning success.
+  return 0;
+}
+//////////////////////////////////////2.2
 
 // Per-CPU process scheduler.
 // Each CPU calls scheduler() after setting itself up.

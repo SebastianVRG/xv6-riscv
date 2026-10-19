@@ -16,6 +16,10 @@ int wait2(int*, struct rusage*);
 /////////////////////////////
 int getprocs(struct pstat*);
 /////////////////////////////////
+//////////////////////2.2
+int getpriority(void);
+int setpriority(int);
+//////////////////////2.2
 int pipe(int *);
 int write(int, const void *, int);
 int read(int, void *, int);

@@ -1,10 +1,10 @@
 #include "types.h"
 #include "param.h"
-#include "memlayout.h"
+#include "memlayout.h" 
 #include "riscv.h"
-#include "spinlock.h"
-#include "proc.h"
-#include "syscall.h"
+#include "spinlock.h" 
+#include "proc.h" 
+#include "syscall.h" 
 #include "defs.h"
 
 // Fetch the uint64 at addr from the current process.
@@ -89,6 +89,10 @@ extern uint64 sys_wait2(void);
 /////////////////////////////
 extern uint64 sys_getprocs(void);
 ///////////////////////////////
+/////////////////////////2.2
+extern uint64 sys_getpriority(void);
+extern uint64 sys_setpriority(void);
+///////////////////////////2.2
 extern uint64 sys_pipe(void);
 extern uint64 sys_read(void);
 extern uint64 sys_kill(void);
@@ -121,6 +125,10 @@ static uint64 (*syscalls[])(void) = {
 //////////////////////////////
   [SYS_getprocs] = sys_getprocs,
 //////////////////////////////
+///////////////2.2
+[SYS_getpriority] = sys_getpriority,
+[SYS_setpriority] = sys_setpriority,
+////////////////////2.2
   [SYS_pipe]    = sys_pipe,
   [SYS_read]    = sys_read,
   [SYS_kill]    = sys_kill,

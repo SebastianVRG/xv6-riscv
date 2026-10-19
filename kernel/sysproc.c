@@ -64,6 +64,31 @@ sys_getprocs(void)
   return getprocs(addr);
 }
 //////////////////////////////////////////
+
+//////////////////////////////////////2.2
+// Gets the calling process's priority.
+uint64
+sys_getpriority(void)
+{
+  // call kgetpriority() in proc.c and return its result
+  return kgetpriority();
+}
+
+// Sets the calling process's priority.
+uint64
+sys_setpriority(void)
+{
+  // holds the priority value passed by the user program
+  int pr;
+
+  // argint allows to read the n-th argument (in this case the first) 
+  // and store it in pr
+  argint(0, &pr);
+  // call ksetpriority() in proc.c and return its result
+  return ksetpriority(pr);
+}
+//////////////////////////////////////2.2
+
 uint64
 sys_sbrk(void)
 {

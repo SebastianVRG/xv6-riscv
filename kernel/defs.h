@@ -103,6 +103,10 @@ int             kwait2(uint64, uint64);
 //////////////////////////////
 int             getprocs(uint64);
 /////////////////////////////
+//////////////////////////2.2
+int             kgetpriority(void);
+int             ksetpriority(int);
+////////////////////////////2.2
 void            wakeup(void*);
 void            yield(void);
 int             either_copyout(int user_dst, uint64 dst, void *src, uint64 len);
